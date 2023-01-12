@@ -1,0 +1,141 @@
+﻿@page "/Index"
+@using WorkProposalList.Data
+
+<PageTitle>Журнал работ</PageTitle>
+
+ <div class="overview-navigation card cw-880">
+    <div class="card-body p-0 border-light border-bottom">
+        <DxMenu Orientation="Orientation.Horizontal"
+                DropDownActionMode="MenuDropDownActionMode.Click"
+                DisplayMode="MenuDisplayMode.Desktop"
+                Title="DevExpress Logo"
+                CollapseItemToIconMode="MenuCollapseItemToIconMode.All"
+                CollapseItemsToHamburgerMenu="true"
+                CssClass="w-100">
+            <TitleTemplate>
+                <div class="icon-logo" role="img" aria-label="@context"></div>
+            </TitleTemplate>
+            <Items>
+                <DxMenuItem title="Log In" Text="@($"Привет, {ResponsibleState.ResponsibleModel.FullName}")" CssClass="notoggle" IconCssClass="menu-icon-user-profile menu-icon" Name="LogIn" Position="ItemPosition.End">
+                <SubMenuTemplate>
+                    <div class="w-100">
+                        <div class="flex-column align-items-center justify-content-center">
+                            <div class="logo-container d-flex align-items-center justify-content-center mt-2">
+                                <div class="oi oi-person text-muted h1" />
+                            </div>
+                            <div class="user-name-container bm-3 mb-2">
+                                <div class="user-name-title text-muted text-center">@ResponsibleState.ResponsibleModel.JobTitle</div>
+                                <div class="user-name text-center">@ResponsibleState.ResponsibleModel.FullName</div>
+                            </div>
+                            <div class="d-flex justify-content-center mb-2">
+                                    <DxButton Text="Выйти" RenderStyle="@ButtonRenderStyle.Secondary" Click="@LogOut" />
+                            </div>
+                        </div>
+                    </div> 
+                </SubMenuTemplate>
+                </DxMenuItem>
+            </Items>
+        </DxMenu>
+    </div>
+</div>
+
+<DxGrid @ref="ProposalGrid"
+        Data="proposalList"
+        PageSize="12"
+        PopupEditFormCssClass="popupEditForm"
+        EditMode="GridEditMode.PopupEditForm"
+        PopupEditFormHeaderText="@popupTitle"
+        EditFormButtonsVisible="false"
+        EditStart="StartEditRow">
+    <Columns>
+        <DxGridDataColumn Caption="Дата приема в работу" FieldName="ReceiptDate" Width="10%" />
+        <DxGridDataColumn Caption="Заказчик" FieldName="Customer" Width="30%" />
+        <DxGridDataColumn Caption="Номер заявки" FieldName="ProposalNumber" Width="10%">
+            <CellDisplayTemplate>
+                @{
+                    var data = (ProposalModel)(context.DataItem);
+                    <span>@($"№{data.ProposalNumber} от {data.ProposalDate.ToShortDateString()}")</span>
+                }
+            </CellDisplayTemplate>
+        </DxGridDataColumn>
+        <DxGridDataColumn Caption="Дата отгрузки ТС" FieldName="ShipDate" Width="15%" />
+        <DxGridDataColumn Caption="Дата отправки документов" FieldName="ShipDocumentDate" Width="15%" />
+        <DxGridDataColumn Caption="Методика" FieldName="Methodology" Width="15%" />
+        <DxGridDataColumn Caption="Ответственный" Width="15%" >
+            <CellDisplayTemplate>
+                @{
+                    var data = (ProposalModel)(context.DataItem);
+                    var responsiblel = responsiblelList?.FirstOrDefault(r => r.Id == data.ResponsibleId);
+                    <span>@responsiblel?.FullName</span>
+                }
+            </CellDisplayTemplate>
+        </DxGridDataColumn>/>
+        <DxGridCommandColumn Width="100px">
+            <HeaderTemplate>
+                <DxButton Click="() => ProposalGrid.StartEditNewRowAsync()"
+                          RenderStyle="ButtonRenderStyle.Link"
+                          RenderStyleMode="ButtonRenderStyleMode.Contained"
+                          Text="Добавить" />
+            </HeaderTemplate>
+            <CellDisplayTemplate>
+                @{
+                    <DxButton Click="() => ProposalGrid.StartEditDataItemAsync(context.DataItem)"
+                              RenderStyle="ButtonRenderStyle.Link"
+                              RenderStyleMode="ButtonRenderStyleMode.Contained"
+                              Text="Изменить" />
+
+                    <DxButton Click="() => ToggleShowDeletePopup((ProposalModel)context.DataItem)"
+                              RenderStyle="ButtonRenderStyle.Link"
+                              RenderStyleMode="ButtonRenderStyleMode.Contained"
+                              Text="Удалить" />
+                }
+            </CellDisplayTemplate>
+        </DxGridCommandColumn>
+    </Columns>
+
+    <EditFormTemplate Context="EditFormContext">
+        <DxFormLayout>
+            <DxFormLayoutItem Caption="Дата приема в работу:" ColSpanMd="12">
+                <DxDateEdit @bind-Date="@editProposal.ReceiptDate" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Заказчик:" ColSpanMd="12">
+                <DxMemo @bind-Text="@editProposal.Customer" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Номер заявки:" ColSpanMd="12">
+                <div style="display: grid; grid-template-columns: auto max-content max-content;">
+                    <DxTextBox @bind-Text="@editProposal.ProposalNumber" />
+                        <span>&nbsp;от&nbsp;</span>
+                    <DxDateEdit @bind-Date="@editProposal.ProposalDate" />
+                </div>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Дата отргрузки ТС:" ColSpanMd="12">
+                <DxDateEdit @bind-Date="@editProposal.ShipDate" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Дата отправки документов:" ColSpanMd="12">
+                <DxDateEdit @bind-Date="@editProposal.ShipDocumentDate" />
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Методика:" ColSpanMd="12">
+                <DxComboBox Data="@methodologyList" @bind-Value="@methodology"></DxComboBox>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem Caption="Ответственный:" ColSpanMd="12">
+                <DxComboBox Data="@responsiblelList" @bind-Value="@editedResponsible" TextFieldName="@nameof(ResponsibleModel.FullName)"></DxComboBox>
+            </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12" Context="FormLayoutContext">
+                    </DxFormLayoutItem>
+            <DxFormLayoutItem ColSpanMd="12" Context="FormLayoutContext">
+                <div class="text-right">
+                    <DxButton RenderStyle="ButtonRenderStyle.Primary" Click="EditModelSaving" Text="Сохранить" />
+                    <DxButton RenderStyle="ButtonRenderStyle.Link" Click="CloseEditPopup" Text="Отменить" />
+                </div>
+            </DxFormLayoutItem>
+        </DxFormLayout>
+    </EditFormTemplate>
+</DxGrid>
+
+<DxPopup @bind-Visible="@isShowDeletePopup" HeaderText="Подтвердите удаление" Width="auto" CloseOnOutsideClick="false">
+    Вы уверены, что хотите удалить заявку @($"{deletedProposal?.Customer} {deletedProposal?.ProposalNumber}")?
+    <div class="dxbs-grid-confirm-dialog-buttons">
+        <DxButton Text="Удалить" RenderStyle="ButtonRenderStyle.Danger" Click="DataItemDeleting" />
+        <DxButton Text="Отменить " RenderStyle="ButtonRenderStyle.Link" Click="() => ToggleShowDeletePopup(null)" />
+    </div>
+</DxPopup>

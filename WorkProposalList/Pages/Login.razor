@@ -1,0 +1,40 @@
+﻿@page "/"
+
+<DxPopup @bind-Visible="@PopupVisible"
+              HeaderText="Вход"
+              ShowFooter="true">
+    <BodyTemplate Context="PopupContext">
+        <div style="pad ding-top: 1rem; padding-bottom: 1rem">
+            <DxFormLayout>
+                <DxFormLayoutItem Caption="Логин" ColSpanMd="12">
+                    <Template>
+                        <DxTextBox @bind-Text=@login NullText="Введите логин" ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" @onkeydown="ClearError"/>
+                    </Template>
+                </DxFormLayoutItem>
+                <DxFormLayoutItem Caption="Пароль" ColSpanMd="12">
+                    <Template>
+                        <DxTextBox @bind-Text=@password NullText="Введите пароль" Password ClearButtonDisplayMode="DataEditorClearButtonDisplayMode.Auto" @onkeydown="ClearError" />
+                    </Template>
+                </DxFormLayoutItem>
+                @if (error != null)
+                {                    
+                <DxFormLayoutItem Caption="Пароль" ColSpanMd="12">
+                    <Template>
+                        <div class="text-danger">
+                            @error
+                        </div>
+                    </Template>
+                </DxFormLayoutItem>
+                }
+            </DxFormLayout>
+        </div>
+    </BodyTemplate>
+    <FooterContentTemplate>
+        <DxButton RenderStyle="ButtonRenderStyle.Primary" Text="Войти"
+                  Click="@Auth" />
+    </FooterContentTemplate>
+</DxPopup>
+
+@code {
+    bool PopupVisible { get; set; } = true;
+}
